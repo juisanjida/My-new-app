@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>কমিউনিটি হেল্প ও স্কিল শেয়ার</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 600px; margin: auto; }
+        header { text-align: center; margin-bottom: 25px; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .form-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #4a5568; }
+        input, select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 15px; }
+        textarea { resize: vertical; }
+        button { width: 100%; background: #2f855a; color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-size: 16px; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #22543d; }
+        .card { background: white; padding: 18px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 15px; border-left: 5px solid #3182ce; }
+        .tag { display: inline-block; background: #ebf8ff; color: #2b6cb0; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+        .card h3 { margin: 0 0 8px 0; color: #2d3748; }
+        .card p { margin: 0 0 12px 0; color: #4a5568; line-height: 1.5; }
+        .meta { font-size: 13px; color: #718096; border-top: 1px solid #edf2f7; padding-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤝 কমিউনিটি হেল্প প্ল্যাটফর্ম</h1>
+            <p>রক্তদান, বই শেয়ার বা যেকোনো জরুরি প্রয়োজনে একে অপরকে সাহায্য করুন।</p>
+        </header>
+
+        <!-- পোস্ট তৈরি করার ফর্ম -->
+        <div class="form-box">
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #2d3748;">নতুন পোস্ট করুন</h3>
+            <div class="form-group">
+                <label>শিরোনাম (Title)</label>
+                <input type="text" id="title" placeholder="যেমন: ক্যালকুলাস শিখতে সাহায্য প্রয়োজন">
+            </div>
+            <div class="form-group">
+                <label>ক্যাটাগরি (Category)</label>
+                <select id="category">
+                    <option value="Blood">রক্তদান (Blood)</option>
+                    <option value="Books/Notes">বই বা নোটস (Books/Notes)</option>
+                    <option value="Emergency">জরুরি সাহায্য (Emergency)</option>
+                    <option value="Skill Share">দক্ষতা শেয়ার (Skill Share)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>বিস্তারিত বিবরণ (Description)</label>
+                <textarea id="description" rows="3" placeholder="আপনার সমস্যার কথা বিস্তারিত লিখুন..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>যোগাযোগের তথ্য (Contact Info)</label>
+                <input type="text" id="contact" placeholder="মোবাইল নম্বর অথবা ইমেইল">
+            </div>
+            <button onclick="submitPost()">পোস্ট পাবলিশ করুন</button>
+        </div>
+
+        <!-- পোস্টগুলো দেখানোর ফিড -->
+        <h2 style="color: #2c3e50; font-size: 20px; margin-bottom: 15px;">সরাসরি সাহায্য ফিড</h2>
+        <div id="feed"></div>
+    </div>
+
+    <script>
+        // ব্যাকএন্ড API থেকে সব পোস্ট নিয়ে এসে স্ক্রিনে দেখানো
+        async function fetchFeed() {
+            const response = await fetch('/api/requests');
+            const data = await response.json();
+            const feedDiv = document.getElementById('feed');
+
+            feedDiv.innerHTML = data.map(item => `
+                <div class="card">
+                    <span class="tag">${item.category}</span>
+                    <h3>${item.title}</h3>
+                    <p>${item.description}</p>
+                    <div class="meta">
+                        <strong>যোগাযোগ:</strong> ${item.contact} | 📅 ${item.createdAt}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // নতুন পোস্ট সাবমিট করা
+        async function submitPost() {
+            const title = document.getElementById('title').value;
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+            const contact = document.getElementById('contact').value;
+
+            if(!title || !description || !contact) {
+                alert('অনুগ্রহ করে সবগুলো ঘর পূরণ করুন!');
+                return;
+            }
+
+            const response = await fetch('/api/requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, category, description, contact })
+            });
+
+            if(response.ok) {
+                document.getElementById('title').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('contact').value = '';
+                fetchFeed();
+            } else {
+                alert('পোস্ট করতে কোনো সমস্যা হয়েছে।');
+            }
+        }
+
+        // পেজ লোড হলেই ফিড দেখাবে
+        fetchFeed();
+    </script>
+</body>
+</html>
+
